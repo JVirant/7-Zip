@@ -59,13 +59,11 @@ HRESULT CArchive::Open(IInStream *inStream, const UInt64 * /* maxCheckStartPosit
   DEBUG_PRINT("namesize=%d\n", namesize);
   DEBUG_PRINT("filecount=%d\n", filecount);
 
-  Byte* buffer = new Byte[max(dirsize, namesize)];
+  Byte* buffer = new Byte[dirsize > namesize ? dirsize : namesize];
   RINOK(ReadBytes(inStream, buffer, namesize));
   auto input = Decompress(buffer, namesize);
-  input[namesize] = 0;
-  Name = (char const*)input->operator const unsigned char *();
+  Name.SetFrom((char const*)(unsigned char const*)*input, input->Size());
   DEBUG_PRINT("archive name=%s\n", (char const*)Name);
-
 
   RINOK(ReadBytes(inStream, buffer, dirsize));
   if (CrcCalc(buffer, dirsize) != CRC)
@@ -150,7 +148,7 @@ CByteBuffer* Decompress(Byte const* src, size_t srcSize) throw()
   if (res)
     return nullptr;
 
-  CByteBuffer* buffer = new CByteBuffer(outStream.GetSize());
+  auto buffer = new CByteBuffer();
   outStream.CopyToBuffer(*buffer);
   return buffer;
 }
@@ -162,7 +160,7 @@ CByteBuffer* Decompress(IInStream& src) throw()
   if (res)
     return nullptr;
 
-  CByteBuffer* buffer = new CByteBuffer(outStream.GetSize());
+  auto buffer = new CByteBuffer();
   outStream.CopyToBuffer(*buffer);
   return buffer;
 }

@@ -44,6 +44,8 @@ IMP_IInArchive_ArcProps
 
 STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
 {
+  RINOK(NWindows::NCOM::PropVariant_Clear(value));
+
   COM_TRY_BEGIN
   NCOM::CPropVariant prop;
   switch (propID)
@@ -117,6 +119,8 @@ bool CHandler::GetCompressedSize(unsigned index, UInt32 &size) const
 STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value)
 {
   DEBUG_PRINT("GetProperty(%d, %d)\n", index, propID);
+  RINOK(NWindows::NCOM::PropVariant_Clear(value));
+
   COM_TRY_BEGIN
   NCOM::CPropVariant prop;
 
@@ -127,7 +131,14 @@ STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *val
     case kpidSize: prop = item.DataSize; break;
     case kpidPackSize: prop = item.CompressedSize; break;
     case kpidCRC: prop = item.CompressedCRC; break;
-    case kpidCTime: prop = item.Timestamp; break;
+    case kpidCTime:
+      auto timestamp = (item.Timestamp + 11644473600ULL) * 10000000ULL; // unix to windows filetime
+      FILETIME ft = {
+        (UInt32)timestamp,
+        (UInt32)(timestamp >> 32)
+      };
+      prop = ft;
+      break;
   }
   prop.Detach(value);
   return S_OK;
@@ -137,13 +148,13 @@ STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *val
 STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems, Int32 testMode, IArchiveExtractCallback *extractCallback)
 {
   DEBUG_PRINT("Extract %d, %d\n", numItems, numItems > 0 ? indices[0] : -1);
-  indices;
-  numItems;
-  testMode;
-  extractCallback;
+  (void)indices;
+  (void)numItems;
+  (void)testMode;
+  (void)extractCallback;
 
   COM_TRY_BEGIN
-  bool allFilesMode = numItems == -1;
+  bool allFilesMode = numItems == ~(0u);
   if (allFilesMode)
     numItems = (UInt32)_archive.NumFiles;
 

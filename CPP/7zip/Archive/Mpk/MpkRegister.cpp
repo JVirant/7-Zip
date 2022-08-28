@@ -1,4 +1,4 @@
-// NsisRegister.cpp
+// MpkRegister.cpp
 
 #include "StdAfx.h"
 

@@ -1,0 +1,66 @@
+
+CFLAGS = $(CFLAGS) \
+  -DEXTERNAL_CODECS \
+
+7Z_OBJS = \
+  $O/MpkHandler.$(OBJ_EXT) \
+  $O/MpkIn.$(OBJ_EXT) \
+  $O/MpkRegister.$(OBJ_EXT) \
+
+COMMON_OBJS = \
+  $O/CRC.$(OBJ_EXT) \
+  $O/IntToString.$(OBJ_EXT) \
+  $O/MyString.$(OBJ_EXT) \
+  $O/StringConvert.$(OBJ_EXT) \
+  $O/StringToInt.$(OBJ_EXT) \
+  $O/MyVector.$(OBJ_EXT) \
+  $O/Wildcard.$(OBJ_EXT) \
+
+WIN_OBJS = \
+  $O/DLL.$(OBJ_EXT) \
+  $O/FileDir.$(OBJ_EXT) \
+  $O/FileFind.$(OBJ_EXT) \
+  $O/FileIO.$(OBJ_EXT) \
+  $O/FileName.$(OBJ_EXT) \
+  $O/PropVariant.$(OBJ_EXT) \
+  $O/Synchronization.$(OBJ_EXT) \
+  $O/System.$(OBJ_EXT) \
+
+7ZIP_COMMON_OBJS = \
+  $O/CreateCoder.$(OBJ_EXT) \
+  $O/CodecExports.$(OBJ_EXT) \
+  $O/InBuffer.$(OBJ_EXT) \
+  $O/InOutTempBuffer.$(OBJ_EXT) \
+  $O/FilterCoder.$(OBJ_EXT) \
+  $O/LimitedStreams.$(OBJ_EXT) \
+  $O/LockedStream.$(OBJ_EXT) \
+  $O/MethodId.$(OBJ_EXT) \
+  $O/MethodProps.$(OBJ_EXT) \
+  $O/OutBuffer.$(OBJ_EXT) \
+  $O/ProgressUtils.$(OBJ_EXT) \
+  $O/PropId.$(OBJ_EXT) \
+  $O/StreamBinder.$(OBJ_EXT) \
+  $O/StreamObjects.$(OBJ_EXT) \
+  $O/StreamUtils.$(OBJ_EXT) \
+  $O/VirtThread.$(OBJ_EXT) \
+
+COMPRESS_OBJS = \
+  $O/CopyCoder.$(OBJ_EXT) \
+  $O/DeflateDecoder.$(OBJ_EXT) \
+  $O/ZlibDecoder.$(OBJ_EXT) \
+
+AR_COMMON_OBJS = \
+  $O/BitlDecoder.$(OBJ_EXT) \
+  $O/CoderMixer2.$(OBJ_EXT) \
+  $O/HandlerOut.$(OBJ_EXT) \
+  $O/InStreamWithCRC.$(OBJ_EXT) \
+  $O/ItemNameUtils.$(OBJ_EXT) \
+  $O/LzOutWindow.$(OBJ_EXT) \
+  $O/MultiStream.$(OBJ_EXT) \
+  $O/OutStreamWithCRC.$(OBJ_EXT) \
+  $O/ParseProperties.$(OBJ_EXT) \
+
+C_OBJS = \
+  $O/Alloc.$(OBJ_EXT) \
+  $O/CpuArch.$(OBJ_EXT) \
+  $O/Threads.$(OBJ_EXT) \

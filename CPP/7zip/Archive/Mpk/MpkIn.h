@@ -3,11 +3,16 @@
 #ifndef __ARCHIVE_MPAK_IN_H
 #define __ARCHIVE_MPAK_IN_H
 
-#if 1
+#if !1
 #include <cstdio>
+#if _WIN32
 #define DEBUG_PRINT(...) {char cad[512]; sprintf(cad, "[7Z] " __VA_ARGS__); OutputDebugStringA(cad);}
 #else
-#define DEBUG_PRINT(...) {(void)(__VA_ARGS__);}
+#define DEBUG_PRINT(...) printf(__VA_ARGS__)
+#endif
+#else
+static inline void __UNUSED__(...) {}
+#define DEBUG_PRINT(...) __UNUSED__(__VA_ARGS__)
 #endif
 
 #include "../../../../C/CpuArch.h"
