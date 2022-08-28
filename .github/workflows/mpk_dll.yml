@@ -1,0 +1,43 @@
+name: Build MPK dll
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build_win32:
+    name: mpk.dll Windows Build
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v2
+      - name: build amd64
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+      - run: |
+          cd CPP/7zip/Archive/Mpk
+          nmake
+      - name: build x86
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64_x86
+      - run: |
+          cd CPP/7zip/Archive/Mpk
+          nmake
+      - name: build arm64
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64_arm64
+      - run: |
+          cd CPP/7zip/Archive/Mpk
+          nmake
+      - name: Upload DLLs
+        uses: actions/upload-artifact@v2
+        with: 
+          name: DLLs
+          path: |
+            CPP/7zip/Archive/Mpk/x64/mpk.dll
+            CPP/7zip/Archive/Mpk/x86/mpk.dll
+            CPP/7zip/Archive/Mpk/arm64/mpk.dll
