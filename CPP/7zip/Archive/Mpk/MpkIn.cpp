@@ -62,7 +62,7 @@ HRESULT CArchive::Open(IInStream *inStream, const UInt64 * /* maxCheckStartPosit
   Byte* buffer = new Byte[dirsize > namesize ? dirsize : namesize];
   RINOK(ReadBytes(inStream, buffer, namesize));
   auto input = Decompress(buffer, namesize);
-  Name.SetFrom((char const*)(unsigned char const*)*input, input->Size());
+  Name.SetFrom((char const*)(unsigned char const*)*input, (unsigned)input->Size());
   DEBUG_PRINT("archive name=%s\n", (char const*)Name);
 
   RINOK(ReadBytes(inStream, buffer, dirsize));
