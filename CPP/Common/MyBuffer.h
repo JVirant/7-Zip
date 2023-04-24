@@ -38,6 +38,22 @@ public:
     }
   }
 
+  // START C++11 move semantic
+  CBuffer(CBuffer &&buffer): _items(buffer._items), _size(buffer._size)
+  {
+    buffer._size = 0;
+    buffer._items = nullptr;
+  }
+  CBuffer &operator =(CBuffer &&buffer)
+  {
+    this->_items = buffer._items;
+    this->_size = buffer._size;
+    buffer._size = 0;
+    buffer._items = nullptr;
+    return *this;
+  }
+  // END C++11 move semantic
+
   ~CBuffer() { delete []_items; }
 
   operator       T *()       { return _items; }
