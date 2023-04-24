@@ -5,6 +5,7 @@ CFLAGS = $(CFLAGS) \
 7Z_OBJS = \
   $O/MpkHandler.$(OBJ_EXT) \
   $O/MpkIn.$(OBJ_EXT) \
+  $O/MpkOut.$(OBJ_EXT) \
   $O/MpkRegister.$(OBJ_EXT) \
 
 COMMON_OBJS = \
@@ -29,6 +30,7 @@ WIN_OBJS = \
 7ZIP_COMMON_OBJS = \
   $O/CreateCoder.$(OBJ_EXT) \
   $O/CodecExports.$(OBJ_EXT) \
+  $O/CWrappers.$(OBJ_EXT) \
   $O/InBuffer.$(OBJ_EXT) \
   $O/InOutTempBuffer.$(OBJ_EXT) \
   $O/FilterCoder.$(OBJ_EXT) \
@@ -47,7 +49,9 @@ WIN_OBJS = \
 COMPRESS_OBJS = \
   $O/CopyCoder.$(OBJ_EXT) \
   $O/DeflateDecoder.$(OBJ_EXT) \
+  $O/DeflateEncoder.$(OBJ_EXT) \
   $O/ZlibDecoder.$(OBJ_EXT) \
+  $O/ZlibEncoder.$(OBJ_EXT) \
 
 AR_COMMON_OBJS = \
   $O/BitlDecoder.$(OBJ_EXT) \
@@ -63,4 +67,7 @@ AR_COMMON_OBJS = \
 C_OBJS = \
   $O/Alloc.$(OBJ_EXT) \
   $O/CpuArch.$(OBJ_EXT) \
+  $O/HuffEnc.$(OBJ_EXT) \
+  $O/LzFind.$(OBJ_EXT) \
+  $O/Sort.$(OBJ_EXT) \
   $O/Threads.$(OBJ_EXT) \

@@ -3,19 +3,7 @@
 #ifndef __ARCHIVE_MPAK_IN_H
 #define __ARCHIVE_MPAK_IN_H
 
-#if !1
-#include <cstdio>
-#if _WIN32
-#define DEBUG_PRINT(...) {char cad[512]; sprintf(cad, "[7Z] " __VA_ARGS__); OutputDebugStringA(cad);}
-#else
-#define DEBUG_PRINT(...) printf(__VA_ARGS__)
-#endif
-#else
-static inline void __UNUSED__(...) {}
-#define DEBUG_PRINT(...) __UNUSED__(__VA_ARGS__)
-#endif
-
-#include "../../../../C/CpuArch.h"
+#include "./MpkItem.h"
 
 #include "../../../Common/DynLimBuf.h"
 #include "../../../Common/MyBuffer.h"
@@ -35,24 +23,10 @@ HRESULT ReadUInt32LE(ISequentialInStream *stream, UInt32& data) throw();
 HRESULT ReadBytes(ISequentialInStream *stream, Byte* array, size_t size) throw();
 HRESULT ReadCString(ISequentialInStream *stream, AString& string) throw();
 
-CByteBuffer* Decompress(Byte const* src, size_t srcSize) throw();
-CByteBuffer* Decompress(IInStream& src) throw();
-HRESULT Decompress(Byte const* src, size_t srcSize, ISequentialOutStream& outStream) throw();
-HRESULT Decompress(IInStream& src, ISequentialOutStream& outStream) throw();
-
-const unsigned kSignatureSize = 4;
-extern const Byte kSignature[kSignatureSize];
-#define MPAK_SIGNATURE { 'M', 'P', 'A', 'K' }
-
-struct CItem
-{
-  AString Name;
-  UInt32 Timestamp;
-  UInt32 DataSize;
-  UInt32 Offset;
-  UInt32 CompressedSize;
-  UInt32 CompressedCRC;
-};
+CByteBuffer Decompress(Byte const* src, size_t srcSize) throw();
+CByteBuffer Decompress(CMyComPtr<ISequentialInStream> &src) throw();
+HRESULT Decompress(Byte const* src, size_t srcSize, CMyComPtr<ISequentialOutStream> &outStream) throw();
+HRESULT Decompress(CMyComPtr<ISequentialInStream> &src, CMyComPtr<ISequentialOutStream> &outStream) throw();
 
 class CArchive
 {
@@ -65,10 +39,11 @@ public:
 
   void Clear()
   {
-    InStream.Release();
-    OpenCallback = NULL;
+    InStream = nullptr;
+    OpenCallback = nullptr;
     NumFiles = 0;
     Name.Wipe_and_Empty();
+    Items.Clear();
   }
 
 private:

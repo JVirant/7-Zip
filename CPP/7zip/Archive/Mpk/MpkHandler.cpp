@@ -6,6 +6,7 @@
 
 #include "../../../Common/ComTry.h"
 #include "../../../Common/IntToString.h"
+#include "../../../Common/StringConvert.h"
 
 #include "../../../Windows/PropVariant.h"
 
@@ -19,6 +20,11 @@
 #define Get32(p) GetUi32(p)
 
 using namespace NWindows;
+
+static void Get_AString_From_UString(const UString &src, AString &dst)
+{
+  UnicodeStringToMultiByte2(dst, src, CP_UTF8);
+}
 
 namespace NArchive {
 namespace Mpk {
@@ -75,9 +81,8 @@ STDMETHODIMP CHandler::Open(IInStream *stream, const UInt64 *maxCheckStartPositi
 {
   DEBUG_PRINT("Open\n");
   COM_TRY_BEGIN
-  Close();
-  if (_archive.Open(stream, maxCheckStartPosition, openArchiveCallback) != S_OK)
-    return S_FALSE;
+  RINOK(Close());
+  RINOK(_archive.Open(stream, maxCheckStartPosition, openArchiveCallback))
   _stream = stream;
   return S_OK;
   COM_TRY_END
@@ -87,8 +92,7 @@ STDMETHODIMP CHandler::Close()
 {
   DEBUG_PRINT("Close\n");
   _archive.Clear();
-  if (_stream)
-    _stream->Release();
+  _stream = nullptr;
   return S_OK;
 }
 
@@ -170,14 +174,98 @@ STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems, Int32 tes
     auto index = allFilesMode ? i : indices[i];
     auto item = _archive.Items[index];
     CMyComPtr<ISequentialOutStream> realOutStream;
+    DEBUG_PRINT("GetStream...");
     RINOK(extractCallback->GetStream(index, &realOutStream, testMode));
 
-    _archive.InStream->Seek(item.Offset, STREAM_SEEK_SET, nullptr);
-    RINOK(Decompress(*_archive.InStream, *realOutStream));
+    DEBUG_PRINT("Seek...");
+    RINOK(_archive.InStream->Seek(item.Offset, STREAM_SEEK_SET, nullptr));
+    DEBUG_PRINT("Decompress...");
+    auto inStream = CMyComPtr<ISequentialInStream>(_archive.InStream);
+    RINOK(Decompress(inStream, realOutStream));
 
     RINOK(extractCallback->SetOperationResult(S_OK));
-    realOutStream.Release();
   }
+  return S_OK;
+  COM_TRY_END
+}
+
+STDMETHODIMP CHandler::UpdateItems(ISequentialOutStream *outStream, UInt32 numItems, IArchiveUpdateCallback *callback)
+{
+  DEBUG_PRINT("UpdateItems %d\n", numItems);
+  COM_TRY_BEGIN
+  if (!callback)
+      return E_FAIL;
+
+  auto name = _archive.GetName();
+  if (!name.Len())
+    name = "new.mpk";
+  COutArchive outArchive(name);
+
+  CObjectVector<CItem> items;
+  for (UInt32 i = 0; i < numItems; ++i)
+  {
+    Int32 newData;
+    Int32 newProps;
+    UInt32 indexInArchive;
+    RINOK(callback->GetUpdateItemInfo(i, &newData, &newProps, &indexInArchive));
+    CItem item;
+    if (indexInArchive != (UInt32)(Int32)-1)
+      item = _archive.Items[indexInArchive];
+    if (IntToBool(newProps))
+    {
+      {
+        NCOM::CPropVariant prop;
+        RINOK(callback->GetProperty(i, kpidPath, &prop));
+        DEBUG_PRINT("kpidPath %d", prop.vt);
+        if (prop.vt == VT_EMPTY || prop.vt != VT_BSTR)
+          return E_INVALIDARG;
+        Get_AString_From_UString(prop.bstrVal, item.Name);
+      }
+      {
+        NCOM::CPropVariant prop;
+        RINOK(callback->GetProperty(i, kpidSize, &prop));
+        DEBUG_PRINT("kpidSize %d", prop.vt);
+        if (prop.vt == VT_EMPTY || prop.vt != VT_UI8)
+          return E_INVALIDARG;
+        item.DataSize = prop.uintVal;
+      }
+      {
+        NCOM::CPropVariant prop;
+        RINOK(callback->GetProperty(i, kpidCTime, &prop));
+        DEBUG_PRINT("kpidCTime %d", prop.vt);
+        if (prop.vt == VT_EMPTY || prop.vt != VT_FILETIME)
+          return E_INVALIDARG;
+        UInt64 timestamp = (UInt64(prop.filetime.dwHighDateTime) << 32) | prop.filetime.dwLowDateTime;
+        item.Timestamp = UInt32(timestamp / 10000000ULL - 11644473600ULL);
+      }
+    }
+    if (IntToBool(newData))
+    {
+      CMyComPtr<ISequentialInStream> itemData;
+      RINOK(callback->GetStream(i, &itemData));
+      outArchive.AddItemToCompress(item, *itemData);
+    }
+    else
+    {
+      _archive.InStream->Seek(item.Offset, STREAM_SEEK_SET, nullptr);
+      outArchive.AddItem(item, *_archive.InStream);
+    }
+  }
+
+  auto res = outArchive.Save(outStream);
+  callback->SetOperationResult(S_OK);
+  return res;
+  COM_TRY_END
+}
+
+STDMETHODIMP CHandler::GetFileTimeType(UInt32 *type)
+{
+  DEBUG_PRINT("GetFileTimeType\n");
+  COM_TRY_BEGIN
+
+  UInt32 t = NFileTimeType::kUnix;
+  *type = t;
+
   return S_OK;
   COM_TRY_END
 }

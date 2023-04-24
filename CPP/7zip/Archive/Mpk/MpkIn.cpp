@@ -54,24 +54,24 @@ HRESULT CArchive::Open(IInStream *inStream, const UInt64 * /* maxCheckStartPosit
   filecount ^= 0x0F0E0D0C;
   CRC = checksum;
 
-  DEBUG_PRINT("checksum=%d\n", checksum);
-  DEBUG_PRINT("dirsize=%d\n", dirsize);
-  DEBUG_PRINT("namesize=%d\n", namesize);
-  DEBUG_PRINT("filecount=%d\n", filecount);
+  DEBUG_PRINT("checksum=%d", checksum);
+  DEBUG_PRINT("dirsize=%d", dirsize);
+  DEBUG_PRINT("namesize=%d", namesize);
+  DEBUG_PRINT("filecount=%d", filecount);
 
-  Byte* buffer = new Byte[dirsize > namesize ? dirsize : namesize];
+  CByteBuffer buffer(dirsize > namesize ? dirsize : namesize);
   RINOK(ReadBytes(inStream, buffer, namesize));
   auto input = Decompress(buffer, namesize);
-  Name.SetFrom((char const*)(unsigned char const*)*input, (unsigned)input->Size());
-  DEBUG_PRINT("archive name=%s\n", (char const*)Name);
+  Name.SetFrom((char const *)(unsigned char const *)input, (unsigned)input.Size());
+  DEBUG_PRINT("archive name=%s", (char const*)Name);
 
   RINOK(ReadBytes(inStream, buffer, dirsize));
   if (CrcCalc(buffer, dirsize) != CRC)
     return S_FALSE;
   input = Decompress(buffer, dirsize);
 
-  CBufInStream* data = new CBufInStream();
-  data->Init(*input, input->Size());
+  CMyComPtr<CBufInStream> data = new CBufInStream();
+  data->Init(input, input.Size());
 
   UInt64 currentOffset;
   inStream->Seek(0, STREAM_SEEK_CUR, &currentOffset);
@@ -92,9 +92,6 @@ HRESULT CArchive::Open(IInStream *inStream, const UInt64 * /* maxCheckStartPosit
 
     Items.Add(item);
   }
-  delete [] buffer;
-  delete input;
-  data->Release();
 
   InStream = inStream;
   OpenCallback = openCallback;
@@ -115,9 +112,7 @@ HRESULT ReadUInt32LE(ISequentialInStream *stream, UInt32& data) throw()
   auto res = ReadStream(stream, &data, &size);
   if (res || size != 4)
     return S_FALSE;
-#ifdef MY_CPU_BE
-  data = GetUi32(data);
-#endif
+  data = GetUi32(&data);
   return S_OK;
 }
 HRESULT ReadBytes(ISequentialInStream *stream, Byte* array, size_t size) throw()
@@ -140,54 +135,60 @@ HRESULT ReadCString(ISequentialInStream *stream, AString& string) throw()
   return S_OK;
 }
 
-CByteBuffer* Decompress(Byte const* src, size_t srcSize) throw()
+CByteBuffer Decompress(Byte const* src, size_t srcSize) throw()
 {
-  CDynBufSeqOutStream outStream;
+  auto outStream = new CDynBufSeqOutStream();
+  auto outPtr = CMyComPtr<ISequentialOutStream>(outStream);
 
-  auto res = Decompress(src, srcSize, outStream);
+  auto res = Decompress(src, srcSize, outPtr);
   if (res)
-    return nullptr;
+    return CByteBuffer();
 
-  auto buffer = new CByteBuffer();
-  outStream.CopyToBuffer(*buffer);
+  CByteBuffer buffer;
+  outStream->CopyToBuffer(buffer);
   return buffer;
 }
 
-CByteBuffer* Decompress(IInStream& src) throw()
+CByteBuffer Decompress(CMyComPtr<ISequentialInStream> &src) throw()
 {
-  CDynBufSeqOutStream outStream;
-  auto res = Decompress(src, outStream);
-  if (res)
-    return nullptr;
+  auto outStream = new CDynBufSeqOutStream();
+  auto outPtr = CMyComPtr<ISequentialOutStream>(outStream);
 
-  auto buffer = new CByteBuffer();
-  outStream.CopyToBuffer(*buffer);
+  auto res = Decompress(src, outPtr);
+  if (res)
+    return CByteBuffer();
+
+  CByteBuffer buffer;
+  outStream->CopyToBuffer(buffer);
   return buffer;
 }
 
-HRESULT Decompress(Byte const* src, size_t srcSize, ISequentialOutStream& outStream) throw()
+HRESULT Decompress(Byte const* src, size_t srcSize, CMyComPtr<ISequentialOutStream> &outStream) throw()
 {
   auto inStream = new CBufInStream();
+  auto inPtr = CMyComPtr<ISequentialInStream>(inStream);
   inStream->Init(src, srcSize);
 
-  auto res = Decompress(*inStream, outStream);
+  auto res = Decompress(inPtr, outStream);
 
   DEBUG_PRINT("Decompress() = %d ref=%d\n", res, inStream->__m_RefCount);
-  inStream->Release();
   return res;
 }
 
-HRESULT Decompress(IInStream& src, ISequentialOutStream& outStream) throw()
+/* Zlib decoder doesn't work with Mpk created by Mythic...
+HRESULT Decompress(CMyComPtr<ISequentialInStream> &src, CMyComPtr<ISequentialOutStream> &outStream) throw()
+{
+  CMyComPtr<NCompress::NZlib::CDecoder> decoder = new NCompress::NZlib::CDecoder();
+  return decoder->Code(src, outStream, nullptr, nullptr, nullptr);
+}
+*/
+HRESULT Decompress(CMyComPtr<ISequentialInStream> &src, CMyComPtr<ISequentialOutStream> &outStream) throw()
 {
   UInt16 _tmp;
-  ReadBytes(&src, (Byte *)&_tmp, 2);
+  ReadBytes(src, (Byte *)&_tmp, 2); // read zlib header
 
-  auto decoder = new NCompress::NDeflate::NDecoder::CCoder(false);
-  src.AddRef(); // the decoder will release one ref
-  auto res = decoder->Code(&src, &outStream, nullptr, nullptr, nullptr);
-  decoder->Release();
-
-  return res;
+  CMyComPtr<NCompress::NDeflate::NDecoder::CCoder> decoder = new NCompress::NDeflate::NDecoder::CCoder(false);
+  return decoder->Code(src, outStream, nullptr, nullptr, nullptr);
 }
 
 }}
