@@ -201,6 +201,7 @@ STDMETHODIMP CHandler::UpdateItems(ISequentialOutStream *outStream, UInt32 numIt
     name = "new.mpk";
   COutArchive outArchive(name);
 
+  callback->SetTotal(numItems + 1);
   CObjectVector<CItem> items;
   for (UInt32 i = 0; i < numItems; ++i)
   {
@@ -250,10 +251,15 @@ STDMETHODIMP CHandler::UpdateItems(ISequentialOutStream *outStream, UInt32 numIt
       _archive.InStream->Seek(item.Offset, STREAM_SEEK_SET, nullptr);
       outArchive.AddItem(item, *_archive.InStream);
     }
+
+    UInt64 val = i;
+    if (callback)
+      callback->SetCompleted(&val);
   }
 
   auto res = outArchive.Save(outStream);
-  callback->SetOperationResult(S_OK);
+  if (callback)
+    callback->SetOperationResult(S_OK);
   return res;
   COM_TRY_END
 }
