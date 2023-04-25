@@ -90,43 +90,6 @@ HRESULT CArchive::Open(IInStream *inStream, const UInt64 * /* maxCheckStartPosit
   return S_OK;
 }
 
-HRESULT ReadByte(ISequentialInStream *stream, Byte& data) throw()
-{
-  size_t size = 1;
-  auto res = ReadStream(stream, &data, &size);
-  if (res || size != 1)
-    return S_FALSE;
-  return S_OK;
-}
-HRESULT ReadUInt32LE(ISequentialInStream *stream, UInt32& data) throw()
-{
-  size_t size = 4;
-  auto res = ReadStream(stream, &data, &size);
-  if (res || size != 4)
-    return S_FALSE;
-  data = GetUi32(&data);
-  return S_OK;
-}
-HRESULT ReadBytes(ISequentialInStream *stream, Byte* array, size_t size) throw()
-{
-  size_t read = size;
-  auto res = ReadStream(stream, array, &read);
-  if (res || read != size)
-    return S_FALSE;
-  return S_OK;
-}
-HRESULT ReadCString(ISequentialInStream *stream, AString& string) throw()
-{
-  Byte c;
-  string = "";
-  do {
-    RINOK(ReadByte(stream, c));
-    if (c)
-      string += (char)c;
-  } while (c);
-  return S_OK;
-}
-
 CByteBuffer Decompress(Byte const* src, size_t srcSize) throw()
 {
   auto outStream = new CDynBufSeqOutStream();

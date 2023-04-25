@@ -103,23 +103,6 @@ STDMETHODIMP CHandler::GetNumberOfItems(UInt32 *numItems)
   return S_OK;
 }
 
-bool CHandler::GetUncompressedSize(unsigned index, UInt32 &size) const
-{
-  DEBUG_PRINT("GetUncompressedSize\n");
-  CItem const& item = _archive.Items[index];
-  size = item.DataSize;
-  return true;
-}
-
-bool CHandler::GetCompressedSize(unsigned index, UInt32 &size) const
-{
-  DEBUG_PRINT("GetCompressedSize\n");
-  const CItem &item = _archive.Items[index];
-  size = item.CompressedSize;
-  return true;
-}
-
-
 STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value)
 {
   DEBUG_PRINT("GetProperty(%d, %d)\n", index, propID);

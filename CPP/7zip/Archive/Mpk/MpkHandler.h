@@ -19,9 +19,6 @@ class CHandler:
   CArchive _archive;
   CMyComPtr<IInStream> _stream;
 
-  bool GetUncompressedSize(unsigned index, UInt32 &size) const;
-  bool GetCompressedSize(unsigned index, UInt32 &size) const;
-
 public:
   MY_UNKNOWN_IMP2(IInArchive, IOutArchive)
 

@@ -18,11 +18,6 @@
 namespace NArchive {
 namespace Mpk {
 
-HRESULT ReadByte(ISequentialInStream *stream, Byte& data) throw();
-HRESULT ReadUInt32LE(ISequentialInStream *stream, UInt32& data) throw();
-HRESULT ReadBytes(ISequentialInStream *stream, Byte* array, size_t size) throw();
-HRESULT ReadCString(ISequentialInStream *stream, AString& string) throw();
-
 CByteBuffer Decompress(Byte const* src, size_t srcSize) throw();
 CByteBuffer Decompress(CMyComPtr<ISequentialInStream> &src) throw();
 HRESULT Decompress(Byte const* src, size_t srcSize, CMyComPtr<ISequentialOutStream> &outStream) throw();
