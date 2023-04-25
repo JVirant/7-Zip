@@ -29,6 +29,7 @@ CFLAGS_WARN_CLANG_12= $(CFLAGS_WARN_CLANG_3_8) \
   -Wno-sign-conversion \
   -Wno-suggest-override \
   -Wno-suggest-destructor-override \
+  -Wno-declaration-after-statement \
 
 CFLAGS_WARN_MAC = \
   -Wno-poison-system-directories \

@@ -3837,7 +3837,7 @@ HRESULT Bench(
         numMilCommands >>= 1;
     }
 
-    for (int jj = 0;; jj++)
+    for (;;) // (int jj = 0;; jj++)
     {
       if (printCallback)
         RINOK(printCallback->CheckBreak());

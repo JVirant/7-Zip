@@ -6,7 +6,9 @@
 *.lo
 *.o
 *.obj
-_o/
+**/_o/
+**/b/m_arm64/
+**/b/m_x64/
 
 # Precompiled Headers
 *.gch
