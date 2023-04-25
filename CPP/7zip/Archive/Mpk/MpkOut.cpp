@@ -14,7 +14,7 @@
 namespace NArchive {
 namespace Mpk {
 
-CByteBuffer Compress(ISequentialInStream &src, UInt64 srcSize, UInt32 &size, UInt32 &crc)
+static CByteBuffer Compress(ISequentialInStream &src, UInt64 srcSize, UInt32 &size, UInt32 &crc)
 {
   CDynBufSeqOutStream outStream;
 
@@ -34,14 +34,14 @@ CByteBuffer Compress(ISequentialInStream &src, UInt64 srcSize, UInt32 &size, UIn
   return buffer;
 }
 
-CMyComPtr<ISequentialInStream> GetInStreamFromBuffer(CByteBuffer const &buffer)
+static CMyComPtr<ISequentialInStream> GetInStreamFromBuffer(CByteBuffer const &buffer)
 {
   auto inStream = new CBufInStream();
   inStream->Init(buffer, buffer.Size());
   return inStream;
 }
 
-HRESULT WriteUInt32LE(ISequentialOutStream &stream, UInt32 val)
+static HRESULT WriteUInt32LE(ISequentialOutStream &stream, UInt32 val)
 {
   char buf[4];
   SetUi32(buf, val);

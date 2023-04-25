@@ -70,4 +70,4 @@ C_OBJS = \
   $O/HuffEnc.$(OBJ_EXT) \
   $O/LzFind.$(OBJ_EXT) \
   $O/Sort.$(OBJ_EXT) \
-  $O/Threads.$(OBJ_EXT) \
+  $O/Threads.$(OBJ_EXT)

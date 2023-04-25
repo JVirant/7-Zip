@@ -21,15 +21,7 @@
 namespace NArchive {
 namespace Mpk {
 
-static const size_t kInputBufSize = 1 << 20;
-
 const Byte kSignature[kSignatureSize] = MPAK_SIGNATURE;
-static const UInt32 kMask_IsCompressed = (UInt32)1 << 31;
-
-static const unsigned kNumCommandParams = 6;
-static const unsigned kCmdSize = 4 + kNumCommandParams * 4;
-
-static const char * const kErrorStr = "$_ERROR_STR_";
 
 HRESULT CArchive::Open(IInStream *inStream, const UInt64 * /* maxCheckStartPosition */, IArchiveOpenCallback *openCallback)
 {
