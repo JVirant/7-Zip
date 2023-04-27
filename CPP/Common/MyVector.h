@@ -3,6 +3,7 @@
 #ifndef __COMMON_MY_VECTOR_H
 #define __COMMON_MY_VECTOR_H
 
+#include <iterator>
 #include <string.h>
 
 const unsigned k_VectorSizeMax = ((unsigned)1 << 31) - 1;
@@ -441,6 +442,30 @@ public:
     }
     while (size > 1);
   }
+
+  // c++11
+  struct iterator
+  {
+    using iterator_category = std::random_access_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = T;
+    using pointer = T*;
+    using reference = T&;
+  private:
+    T *_ptr;
+  public:
+    iterator(T *ptr) : _ptr(ptr) {}
+    reference operator*() const { return *_ptr; }
+    pointer operator->() { return _ptr; }
+
+    iterator& operator++() { _ptr++; return *this; }
+    iterator operator++(int) { auto tmp = *this; ++(*this); return tmp; }
+
+    friend bool operator== (const iterator& a, const iterator& b) { return a._ptr == b._ptr; };
+    friend bool operator!= (const iterator& a, const iterator& b) { return a._ptr != b._ptr; };
+  };
+  iterator begin() { return &this->_items[0]; }
+  iterator end() { return &this->_items[this->_size]; }
 };
 
 typedef CRecordVector<int> CIntVector;
