@@ -1,0 +1,11 @@
+#include "../../MyVersionInfo.rc"
+
+MY_VERSION_INFO_DLL("GGPK (Path of Exile) Plugin", "GGPK")
+
+0 ICON  "../Icons/ggpk.ico"
+
+STRINGTABLE
+BEGIN
+  100 "GGPK:0"
+END
+

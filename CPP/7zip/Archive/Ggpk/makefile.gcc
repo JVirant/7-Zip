@@ -1,0 +1,34 @@
+PROG = ggpk
+DEF_FILE = ../Archive.def
+OBJ_EXT = o
+
+include ./makefile_objects
+
+AR_OBJS = \
+  $O/ArchiveExports.$(OBJ_EXT) \
+  $O/DllExports2.$(OBJ_EXT) \
+
+SYS_OBJS = \
+  $O/7zCrc.o \
+  $O/7zCrcOpt.o \
+  $O/MyWindows.o \
+  $O/UTFConvert.o \
+
+OBJS = \
+  $(C_OBJS) \
+  $(MT_OBJS) \
+  $(COMMON_OBJS) \
+  $(WIN_OBJS) \
+  $(SYS_OBJS) \
+  $(COMPRESS_OBJS) \
+  $(AR_COMMON_OBJS) \
+  $(7ZIP_COMMON_OBJS) \
+  $(UI_COMMON_OBJS) \
+  $(CONSOLE_OBJS) \
+  $(7Z_OBJS) \
+  $(AR_OBJS) \
+
+include ../../7zip_gcc.mak
+
+$O/%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $<
