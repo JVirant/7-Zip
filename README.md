@@ -10,6 +10,7 @@ I'm not sure of everything needed to build 7zip sources. For now, I identified:
 You can check the DOC/readme.txt file for more informations.
 
 ## MPAK (Dark Age of Camelot packages: mpk, npk)
+Support read and write of *.mpk and *.npk files of DAoC.
 ### Windows
 You can build the dll in `CPP/7zip/Archive/Mpk`, just run nmake from a Visual Studio command prompt.
 ### Linux
@@ -18,6 +19,17 @@ You can build the shared libraby in `CPP/7zip/Archive/Mpk` with `make -f makefil
 You can build the shared libraby in `CPP/7zip/Archive/Mpk` with `make -f ../../compl_mac_arm64.mak -j`
 ### MacOS (x64)
 You can build the shared libraby in `CPP/7zip/Archive/Mpk` with `make -f ../../compl_mac_x64.mak -j`
+
+## GGPK (Path of Exile package file: Content.ggpk)
+Read only.
+### Windows
+You can build the dll in `CPP/7zip/Archive/Ggpk`, just run nmake from a Visual Studio command prompt.
+### Linux
+You can build the shared libraby in `CPP/7zip/Archive/Ggpk` with `make -f makefile.gcc -j`
+### MacOS (arm64)
+You can build the shared libraby in `CPP/7zip/Archive/Ggpk` with `make -f ../../compl_mac_arm64.mak -j`
+### MacOS (x64)
+You can build the shared libraby in `CPP/7zip/Archive/Ggpk` with `make -f ../../compl_mac_x64.mak -j`
 
 # Thanks
 
