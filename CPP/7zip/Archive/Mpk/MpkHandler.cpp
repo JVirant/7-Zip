@@ -76,7 +76,6 @@ STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
   COM_TRY_END
 }
 
-
 STDMETHODIMP CHandler::Open(IInStream *stream, const UInt64 *maxCheckStartPosition, IArchiveOpenCallback * openArchiveCallback)
 {
   DEBUG_PRINT("Open\n");
@@ -105,7 +104,6 @@ STDMETHODIMP CHandler::GetNumberOfItems(UInt32 *numItems)
 
 STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value)
 {
-  DEBUG_PRINT("GetProperty(%d, %d)\n", index, propID);
   RINOK(NWindows::NCOM::PropVariant_Clear(value));
 
   COM_TRY_BEGIN
@@ -162,9 +160,17 @@ STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems, Int32 tes
 
     DEBUG_PRINT("Seek...");
     RINOK(_archive.InStream->Seek(item.Offset, STREAM_SEEK_SET, nullptr));
+    auto buffer = CByteBuffer(item.CompressedSize);
+    RINOK(_archive.InStream->Read(buffer, item.CompressedSize, nullptr));
+    auto calculatedCRC = CrcCalc(buffer, buffer.Size());
+    DEBUG_PRINT("%s: CRC in file=%08x, calculated=%08x", item.Name.Ptr(), item.CompressedCRC, calculatedCRC);
+
     DEBUG_PRINT("Decompress...");
-    auto inStream = CMyComPtr<ISequentialInStream>(_archive.InStream);
-    RINOK(Decompress(inStream, realOutStream));
+    {
+      RINOK(_archive.InStream->Seek(item.Offset, STREAM_SEEK_SET, nullptr));
+      auto inStream = CMyComPtr<ISequentialInStream>(_archive.InStream);
+      RINOK(Decompress(inStream, realOutStream));
+    }
 
     RINOK(extractCallback->SetOperationResult(S_OK));
   }
@@ -180,12 +186,36 @@ STDMETHODIMP CHandler::UpdateItems(ISequentialOutStream *outStream, UInt32 numIt
       return E_FAIL;
 
   auto name = _archive.GetName();
+
+  CMyComPtr<IArchiveGetRootProps> archive;
+  RINOK(callback->QueryInterface(IID_IArchiveGetRootProps, (void **)&archive));
+  if (archive)
+  {
+    NCOM::CPropVariant prop;
+    if (name.Len() <= 4)
+    {
+      RINOK(archive->GetRootProp(kpidArcFileName, &prop));
+      DEBUG_PRINT("Get prop kpidArcFileName = '%ls'", prop.bstrVal);
+      Get_AString_From_UString(prop.bstrVal, name);
+    }
+  }
+
   if (!name.Len())
     name = "new.mpk";
   COutArchive outArchive(name);
 
-  callback->SetTotal(numItems + 1);
+  UInt64 completed = 0;
+  for (UInt32 i = 0; i < numItems; ++i)
+  {
+    NCOM::CPropVariant prop;
+    callback->GetProperty(i, kpidSize, &prop);
+    if (prop.vt == VT_UI8)
+      completed += prop.uintVal;
+  }
+  callback->SetTotal(completed);
+
   CObjectVector<CItem> items;
+  completed = 0;
   for (UInt32 i = 0; i < numItems; ++i)
   {
     Int32 newData;
@@ -197,37 +227,33 @@ STDMETHODIMP CHandler::UpdateItems(ISequentialOutStream *outStream, UInt32 numIt
       item = _archive.Items[indexInArchive];
     if (IntToBool(newProps))
     {
+      NCOM::CPropVariant prop;
       {
-        NCOM::CPropVariant prop;
         RINOK(callback->GetProperty(i, kpidPath, &prop));
-        DEBUG_PRINT("kpidPath %d", prop.vt);
         if (prop.vt == VT_EMPTY || prop.vt != VT_BSTR)
           return E_INVALIDARG;
         Get_AString_From_UString(prop.bstrVal, item.Name);
       }
       {
-        NCOM::CPropVariant prop;
         RINOK(callback->GetProperty(i, kpidSize, &prop));
-        DEBUG_PRINT("kpidSize %d", prop.vt);
         if (prop.vt == VT_EMPTY || prop.vt != VT_UI8)
           return E_INVALIDARG;
         item.DataSize = prop.uintVal;
       }
       {
-        NCOM::CPropVariant prop;
         RINOK(callback->GetProperty(i, kpidCTime, &prop));
-        DEBUG_PRINT("kpidCTime %d", prop.vt);
         if (prop.vt == VT_EMPTY || prop.vt != VT_FILETIME)
           return E_INVALIDARG;
         UInt64 timestamp = (UInt64(prop.filetime.dwHighDateTime) << 32) | prop.filetime.dwLowDateTime;
         item.Timestamp = UInt32(timestamp / 10000000ULL - 11644473600ULL);
       }
     }
+
     if (IntToBool(newData))
     {
       CMyComPtr<ISequentialInStream> itemData;
       RINOK(callback->GetStream(i, &itemData));
-      outArchive.AddItemToCompress(item, *itemData);
+      outArchive.AddItemToCompress(item, *itemData, this->_compressionLevel);
     }
     else
     {
@@ -235,15 +261,12 @@ STDMETHODIMP CHandler::UpdateItems(ISequentialOutStream *outStream, UInt32 numIt
       outArchive.AddItem(item, *_archive.InStream);
     }
 
-    UInt64 val = i;
-    if (callback)
-      callback->SetCompleted(&val);
+    completed += item.DataSize;
+    callback->SetCompleted(&completed);
+    callback->SetOperationResult(S_OK);
   }
 
-  auto res = outArchive.Save(outStream);
-  if (callback)
-    callback->SetOperationResult(S_OK);
-  return res;
+  return outArchive.Save(outStream);
   COM_TRY_END
 }
 
@@ -257,6 +280,26 @@ STDMETHODIMP CHandler::GetFileTimeType(UInt32 *type)
 
   return S_OK;
   COM_TRY_END
+}
+
+STDMETHODIMP CHandler::SetProperties(const wchar_t * const *names, PROPVARIANT const *values, UInt32 numProps)
+{
+  (void)values;
+
+  DEBUG_PRINT("SetProperties %u", numProps);
+  for (UInt32 i = 0u; i < numProps; ++i)
+  {
+    UString name = names[i];
+    name.MakeLower_Ascii();
+    if (name.IsEmpty())
+      return E_INVALIDARG;
+
+    auto const & value = values[i];
+    DEBUG_PRINT("SetProperty %Ls = %d", name.Ptr(), value.intVal);
+    if (name[0] == 'x')
+      this->_compressionLevel = max(0, min(9, value.intVal));
+  }
+  return S_OK;
 }
 
 }}

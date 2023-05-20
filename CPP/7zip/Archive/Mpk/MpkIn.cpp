@@ -8,7 +8,6 @@
 #include "../../Common/LimitedStreams.h"
 #include "../../Common/StreamUtils.h"
 
-#include "../../Compress/DeflateDecoder.h"
 #include "../../Compress/ZlibDecoder.h"
 
 #include "MpkIn.h"
@@ -51,14 +50,16 @@ HRESULT CArchive::Open(IInStream *inStream, const UInt64 * /* maxCheckStartPosit
   DEBUG_PRINT("namesize=%d", namesize);
   DEBUG_PRINT("filecount=%d", filecount);
 
-  CByteBuffer buffer(dirsize > namesize ? dirsize : namesize);
+  CByteBuffer buffer(max(dirsize, namesize));
   RINOK(ReadBytes(inStream, buffer, namesize));
   auto input = Decompress(buffer, namesize);
   Name.SetFrom((char const *)(unsigned char const *)input, (unsigned)input.Size());
-  DEBUG_PRINT("archive name=%s", (char const*)Name);
+  DEBUG_PRINT("archive name='%s' (%zub)", (char const*)Name, input.Size());
 
   RINOK(ReadBytes(inStream, buffer, dirsize));
-  if (CrcCalc(buffer, dirsize) != CRC)
+  auto calculatedCRC = CrcCalc(buffer, dirsize);
+  DEBUG_PRINT("CRC in file=%08x, calculated=%08x", CRC, calculatedCRC);
+  if (calculatedCRC != CRC)
     return S_FALSE;
   input = Decompress(buffer, dirsize);
 
@@ -73,14 +74,17 @@ HRESULT CArchive::Open(IInStream *inStream, const UInt64 * /* maxCheckStartPosit
     RINOK(ReadBytes(data, buf, 256));
     item.Name = (char const*)buf;
     RINOK(ReadUInt32LE(data, item.Timestamp));
-    UInt32 tmp;
-    RINOK(ReadUInt32LE(data, tmp));
-    RINOK(ReadUInt32LE(data, tmp));
+    UInt32 tmp1;
+    RINOK(ReadUInt32LE(data, tmp1));
+    UInt32 offset;
+    RINOK(ReadUInt32LE(data, offset));
     RINOK(ReadUInt32LE(data, item.DataSize));
     RINOK(ReadUInt32LE(data, item.Offset));
     item.Offset += (UInt32)currentOffset;
     RINOK(ReadUInt32LE(data, item.CompressedSize));
     RINOK(ReadUInt32LE(data, item.CompressedCRC));
+
+    DEBUG_PRINT("%s: ts:%d u:%d off:%d size:%d coffset:%d csize:%d crc:%08x", item.Name.Ptr(), item.Timestamp, tmp1, offset, item.DataSize, item.Offset, item.CompressedSize, item.CompressedCRC);
 
     Items.Add(item);
   }
@@ -139,10 +143,7 @@ HRESULT Decompress(CMyComPtr<ISequentialInStream> &src, CMyComPtr<ISequentialOut
 */
 HRESULT Decompress(CMyComPtr<ISequentialInStream> &src, CMyComPtr<ISequentialOutStream> &outStream) throw()
 {
-  UInt16 _tmp;
-  ReadBytes(src, (Byte *)&_tmp, 2); // read zlib header
-
-  CMyComPtr<NCompress::NDeflate::NDecoder::CCoder> decoder = new NCompress::NDeflate::NDecoder::CCoder(false);
+  CMyComPtr<NCompress::NZlib::CDecoder> decoder = new NCompress::NZlib::CDecoder();
   return decoder->Code(src, outStream, nullptr, nullptr, nullptr);
 }
 
