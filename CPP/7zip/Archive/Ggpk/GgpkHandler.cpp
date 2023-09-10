@@ -42,7 +42,7 @@ static const Byte kArcProps[] =
 IMP_IInArchive_Props
 IMP_IInArchive_ArcProps
 
-STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
+Z7_COM7F_IMF(CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value))
 {
   RINOK(NWindows::NCOM::PropVariant_Clear(value));
 
@@ -70,7 +70,7 @@ STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
 }
 
 
-STDMETHODIMP CHandler::Open(IInStream *stream, const UInt64 *maxCheckStartPosition, IArchiveOpenCallback * openArchiveCallback)
+Z7_COM7F_IMF(CHandler::Open(IInStream *stream, const UInt64 *maxCheckStartPosition, IArchiveOpenCallback * openArchiveCallback))
 {
   DEBUG_PRINT("Open");
   COM_TRY_BEGIN
@@ -81,7 +81,7 @@ STDMETHODIMP CHandler::Open(IInStream *stream, const UInt64 *maxCheckStartPositi
   COM_TRY_END
 }
 
-STDMETHODIMP CHandler::Close()
+Z7_COM7F_IMF(CHandler::Close())
 {
   DEBUG_PRINT("Close");
   _archive.Clear();
@@ -89,14 +89,14 @@ STDMETHODIMP CHandler::Close()
   return S_OK;
 }
 
-STDMETHODIMP CHandler::GetNumberOfItems(UInt32 *numItems)
+Z7_COM7F_IMF(CHandler::GetNumberOfItems(UInt32 *numItems))
 {
   DEBUG_PRINT("GetNumberOfItems");
   *numItems = _archive.Items.Size();
   return S_OK;
 }
 
-STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value)
+Z7_COM7F_IMF(CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value))
 {
   RINOK(NWindows::NCOM::PropVariant_Clear(value));
 
@@ -129,7 +129,7 @@ STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *val
   COM_TRY_END
 }
 
-STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems, Int32 testMode, IArchiveExtractCallback *extractCallback)
+Z7_COM7F_IMF(CHandler::Extract(const UInt32 *indices, UInt32 numItems, Int32 testMode, IArchiveExtractCallback *extractCallback))
 {
   DEBUG_PRINT("Extract %d, %d", numItems, numItems > 0 ? indices[0] : -1);
   (void)indices;
@@ -149,11 +149,13 @@ STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems, Int32 tes
 
   RINOK(extractCallback->PrepareOperation(testMode));
 
-  CMyComPtr<CLocalProgress> progress = new CLocalProgress();
-  progress->Init(extractCallback, false);
+  auto localProgress = new CLocalProgress();
+  CMyComPtr<ICompressProgressInfo> progress = localProgress;
+  localProgress->Init(extractCallback, false);
   CMyComPtr<ICompressCoder> copyCoder = new NCompress::CCopyCoder();
-  CMyComPtr<CLimitedSequentialInStream> inStream = new CLimitedSequentialInStream();
-  inStream->SetStream(_archive.InStream);
+  auto inLimitedStream = new CLimitedSequentialInStream();
+  CMyComPtr<ISequentialInStream> inStream = inLimitedStream;
+  inLimitedStream->SetStream(_archive.InStream);
 
   for (UInt32 i = 0; i < numItems; ++i)
   {
@@ -163,12 +165,12 @@ STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems, Int32 tes
     CMyComPtr<ISequentialOutStream> outStream;
     RINOK(extractCallback->GetStream(index, &outStream, testMode));
     RINOK(_archive.InStream->Seek(item.Offset, STREAM_SEEK_SET, nullptr));
-    inStream->Init(item.Size);
+    inLimitedStream->Init(item.Size);
 
     DEBUG_PRINT("Extract %ls/%ls %llu, %lluB isDir:%d", item.Path.Ptr(), item.Name.Ptr(), item.Offset, item.Size, item.IsDirectory);
 
-    progress->InSize = item.Size;
-    progress->OutSize = item.Size;
+    localProgress->InSize = item.Size;
+    localProgress->OutSize = item.Size;
 
     RINOK(copyCoder->Code(inStream, outStream, nullptr, nullptr, progress));
 

@@ -14,7 +14,7 @@
 namespace NArchive {
 namespace Mpk {
 
-static CByteBuffer Compress(ISequentialInStream &src, UInt64 srcSize, UInt32 &size, UInt32 &crc, int level = 5, CLocalProgress *progress = nullptr)
+static CByteBuffer Compress(ISequentialInStream &src, UInt64 srcSize, UInt32 &size, UInt32 &crc, int level = 5, ICompressProgressInfo *progress = nullptr)
 {
   CDynBufSeqOutStream outStream;
 
@@ -29,8 +29,8 @@ static CByteBuffer Compress(ISequentialInStream &src, UInt64 srcSize, UInt32 &si
     CMyComPtr<ICompressProgressInfo> compressProgress;
     if (progress)
       RINOK(progress->QueryInterface(IID_ICompressProgressInfo, (void**)&compressProgress))
-    auto res = encoder.Code(&src, &outStream, &srcSize, nullptr, compressProgress);
-    if (res)
+    auto res = (*(ICompressCoder*)&encoder).Code(&src, &outStream, &srcSize, nullptr, compressProgress);
+    if (res != 0)
       return CByteBuffer();
   }
 
@@ -56,7 +56,7 @@ static HRESULT WriteUInt32LE(ISequentialOutStream &stream, UInt32 val)
   return stream.Write(buf, sizeof(buf), nullptr);
 }
 
-HRESULT COutArchive::AddItemToCompress(CItem const &item, ISequentialInStream &data, int level, CLocalProgress *progress)
+HRESULT COutArchive::AddItemToCompress(CItem const &item, ISequentialInStream &data, int level, ICompressProgressInfo *progress)
 {
   auto out = item;
   auto compressedBuffer = Compress(data, out.DataSize, out.CompressedSize, out.CompressedCRC, level, progress);
@@ -66,7 +66,7 @@ HRESULT COutArchive::AddItemToCompress(CItem const &item, ISequentialInStream &d
   return res;
 }
 
-HRESULT COutArchive::AddItem(CItem const &item, ISequentialInStream &data, CLocalProgress *progress)
+HRESULT COutArchive::AddItem(CItem const &item, ISequentialInStream &data, ICompressProgressInfo *progress)
 {
   COutItem out;
   out.Name = item.Name;
@@ -93,6 +93,7 @@ HRESULT COutArchive::Save(ISequentialOutStream *outStream)
 
   // Create index of files in MPK format
   CDynBufSeqOutStream bufferStream;
+  ISequentialOutStream& bufferStreamRef = bufferStream;
   UInt32 offset = 0;
   UInt32 compressedOffset = 0;
   for (unsigned i = 0; i < this->Items.Size(); ++i)
@@ -103,7 +104,7 @@ HRESULT COutArchive::Save(ISequentialOutStream *outStream)
       char itemName[256];
       memset(itemName, 0, sizeof(itemName));
       memcpy(itemName, item.Name.Ptr(), MyMin(item.Name.Len(), 255u));
-      RINOK(bufferStream.Write(itemName, sizeof(itemName), nullptr));
+      RINOK(bufferStreamRef.Write(itemName, sizeof(itemName), nullptr));
     }
 
     RINOK(WriteUInt32LE(bufferStream, item.Timestamp));
@@ -131,7 +132,7 @@ HRESULT COutArchive::Save(ISequentialOutStream *outStream)
   UInt32 nameCRC;
   {
     bufferStream.Init();
-    RINOK(bufferStream.Write(this->ArchiveName.Ptr(), this->ArchiveName.Len() + 1, nullptr));
+    RINOK(bufferStreamRef.Write(this->ArchiveName.Ptr(), this->ArchiveName.Len() + 1, nullptr));
     bufferStream.CopyToBuffer(name);
     auto nameInStream = GetInStreamFromBuffer(name);
     name = Compress(*nameInStream, name.Size(), nameCompressedSize, nameCRC);

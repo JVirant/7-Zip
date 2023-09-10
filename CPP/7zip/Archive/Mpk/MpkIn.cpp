@@ -63,8 +63,9 @@ HRESULT CArchive::Open(IInStream *inStream, const UInt64 * /* maxCheckStartPosit
     return S_FALSE;
   input = Decompress(buffer, dirsize);
 
-  CMyComPtr<CBufInStream> data = new CBufInStream();
-  data->Init(input, input.Size());
+  auto dataStream = new CBufInStream();
+  CMyComPtr<IInStream> data = dataStream;
+  dataStream->Init(input, input.Size());
 
   UInt64 currentOffset;
   inStream->Seek(0, STREAM_SEEK_CUR, &currentOffset);
@@ -100,7 +101,7 @@ CByteBuffer Decompress(Byte const* src, size_t srcSize) throw()
   auto outPtr = CMyComPtr<ISequentialOutStream>(outStream);
 
   auto res = Decompress(src, srcSize, outPtr);
-  if (res)
+  if (res != 0)
     return CByteBuffer();
 
   CByteBuffer buffer;
@@ -114,7 +115,7 @@ CByteBuffer Decompress(CMyComPtr<ISequentialInStream> &src) throw()
   auto outPtr = CMyComPtr<ISequentialOutStream>(outStream);
 
   auto res = Decompress(src, outPtr);
-  if (res)
+  if (res != 0)
     return CByteBuffer();
 
   CByteBuffer buffer;
@@ -130,20 +131,13 @@ HRESULT Decompress(Byte const* src, size_t srcSize, CMyComPtr<ISequentialOutStre
 
   auto res = Decompress(inPtr, outStream);
 
-  DEBUG_PRINT("Decompress() = %d ref=%d\n", res, inStream->__m_RefCount);
+  DEBUG_PRINT("Decompress() = %d\n", res);
   return res;
 }
 
-/* Zlib decoder doesn't work with Mpk created by Mythic...
 HRESULT Decompress(CMyComPtr<ISequentialInStream> &src, CMyComPtr<ISequentialOutStream> &outStream) throw()
 {
-  CMyComPtr<NCompress::NZlib::CDecoder> decoder = new NCompress::NZlib::CDecoder();
-  return decoder->Code(src, outStream, nullptr, nullptr, nullptr);
-}
-*/
-HRESULT Decompress(CMyComPtr<ISequentialInStream> &src, CMyComPtr<ISequentialOutStream> &outStream) throw()
-{
-  CMyComPtr<NCompress::NZlib::CDecoder> decoder = new NCompress::NZlib::CDecoder();
+  CMyComPtr<ICompressCoder> decoder = new NCompress::NZlib::CDecoder();
   return decoder->Code(src, outStream, nullptr, nullptr, nullptr);
 }
 

@@ -10,7 +10,7 @@
 namespace NArchive {
 namespace Ggpk {
 
-class CHandler:
+class CHandler Z7_final:
   public IInArchive,
   public CMyUnknownImp
 {
@@ -18,9 +18,9 @@ class CHandler:
   CMyComPtr<IInStream> _stream;
 
 public:
-  MY_UNKNOWN_IMP1(IInArchive)
+  Z7_COM_UNKNOWN_IMP_1(IInArchive)
 
-  INTERFACE_IInArchive(;)
+  Z7_IFACE_COM7_IMP(IInArchive)
 };
 
 }}

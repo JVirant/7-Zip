@@ -13,23 +13,27 @@ You can check the DOC/readme.txt file for more informations.
 Support read and write of *.mpk and *.npk files of DAoC.
 ### Windows
 You can build the dll in `CPP/7zip/Archive/Mpk`, just run nmake from a Visual Studio command prompt.
+
+Maybe you need to set the environment variable `PLATFORM` with `x64` or `arm64`.
 ### Linux
-You can build the shared libraby in `CPP/7zip/Archive/Mpk` with `make -f makefile.gcc -j`
+You can build the shared libraby in `CPP/7zip/Archive/Mpk` with `make -f makefile.gcc -j`.
 ### MacOS (arm64)
-You can build the shared libraby in `CPP/7zip/Archive/Mpk` with `make -f ../../compl_mac_arm64.mak -j`
+You can build the shared libraby in `CPP/7zip/Archive/Mpk` with `make -f ../../compl_mac_arm64.mak -j`.
 ### MacOS (x64)
-You can build the shared libraby in `CPP/7zip/Archive/Mpk` with `make -f ../../compl_mac_x64.mak -j`
+You can build the shared libraby in `CPP/7zip/Archive/Mpk` with `make -f ../../compl_mac_x64.mak -j`.
 
 ## GGPK (Path of Exile package file: Content.ggpk)
 Read only.
 ### Windows
 You can build the dll in `CPP/7zip/Archive/Ggpk`, just run nmake from a Visual Studio command prompt.
+
+Maybe you need to set the environment variable `PLATFORM` with `x64` or `arm64`.
 ### Linux
-You can build the shared libraby in `CPP/7zip/Archive/Ggpk` with `make -f makefile.gcc -j`
+You can build the shared libraby in `CPP/7zip/Archive/Ggpk` with `make -f makefile.gcc -j`.
 ### MacOS (arm64)
-You can build the shared libraby in `CPP/7zip/Archive/Ggpk` with `make -f ../../compl_mac_arm64.mak -j`
+You can build the shared libraby in `CPP/7zip/Archive/Ggpk` with `make -f ../../compl_mac_arm64.mak -j`.
 ### MacOS (x64)
-You can build the shared libraby in `CPP/7zip/Archive/Ggpk` with `make -f ../../compl_mac_x64.mak -j`
+You can build the shared libraby in `CPP/7zip/Archive/Ggpk` with `make -f ../../compl_mac_x64.mak -j`.
 
 # Thanks
 

@@ -29,8 +29,8 @@ class COutArchive
   CObjectVector<COutItem> Items;
 
 public:
-  HRESULT AddItemToCompress(CItem const &item, ISequentialInStream &data, int level, CLocalProgress *progress = nullptr);
-  HRESULT AddItem(CItem const &item, ISequentialInStream &data, CLocalProgress *progress = nullptr);
+  HRESULT AddItemToCompress(CItem const &item, ISequentialInStream &data, int level, ICompressProgressInfo *progress = nullptr);
+  HRESULT AddItem(CItem const &item, ISequentialInStream &data, ICompressProgressInfo *progress = nullptr);
   HRESULT Save(ISequentialOutStream *outStream);
 
   COutArchive(AString const &name):

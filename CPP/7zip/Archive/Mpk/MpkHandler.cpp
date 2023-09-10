@@ -48,7 +48,7 @@ static const Byte kArcProps[] =
 IMP_IInArchive_Props
 IMP_IInArchive_ArcProps
 
-STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
+Z7_COM7F_IMF(CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value))
 {
   RINOK(NWindows::NCOM::PropVariant_Clear(value));
 
@@ -76,7 +76,7 @@ STDMETHODIMP CHandler::GetArchiveProperty(PROPID propID, PROPVARIANT *value)
   COM_TRY_END
 }
 
-STDMETHODIMP CHandler::Open(IInStream *stream, const UInt64 *maxCheckStartPosition, IArchiveOpenCallback * openArchiveCallback)
+Z7_COM7F_IMF(CHandler::Open(IInStream *stream, const UInt64 *maxCheckStartPosition, IArchiveOpenCallback * openArchiveCallback))
 {
   DEBUG_PRINT("Open\n");
   COM_TRY_BEGIN
@@ -87,7 +87,7 @@ STDMETHODIMP CHandler::Open(IInStream *stream, const UInt64 *maxCheckStartPositi
   COM_TRY_END
 }
 
-STDMETHODIMP CHandler::Close()
+Z7_COM7F_IMF(CHandler::Close())
 {
   DEBUG_PRINT("Close\n");
   _archive.Clear();
@@ -95,14 +95,14 @@ STDMETHODIMP CHandler::Close()
   return S_OK;
 }
 
-STDMETHODIMP CHandler::GetNumberOfItems(UInt32 *numItems)
+Z7_COM7F_IMF(CHandler::GetNumberOfItems(UInt32 *numItems))
 {
   DEBUG_PRINT("GetNumberOfItems\n");
   *numItems = _archive.Items.Size();
   return S_OK;
 }
 
-STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value)
+Z7_COM7F_IMF(CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value))
 {
   RINOK(NWindows::NCOM::PropVariant_Clear(value));
 
@@ -130,7 +130,7 @@ STDMETHODIMP CHandler::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *val
   COM_TRY_END
 }
 
-STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems, Int32 testMode, IArchiveExtractCallback *extractCallback)
+Z7_COM7F_IMF(CHandler::Extract(const UInt32 *indices, UInt32 numItems, Int32 testMode, IArchiveExtractCallback *extractCallback))
 {
   DEBUG_PRINT("Extract %d, %d\n", numItems, numItems > 0 ? indices[0] : -1);
   (void)indices;
@@ -178,7 +178,7 @@ STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems, Int32 tes
   COM_TRY_END
 }
 
-STDMETHODIMP CHandler::UpdateItems(ISequentialOutStream *outStream, UInt32 numItems, IArchiveUpdateCallback *callback)
+Z7_COM7F_IMF(CHandler::UpdateItems(ISequentialOutStream *outStream, UInt32 numItems, IArchiveUpdateCallback *callback))
 {
   DEBUG_PRINT("UpdateItems %d\n", numItems);
   COM_TRY_BEGIN
@@ -270,7 +270,7 @@ STDMETHODIMP CHandler::UpdateItems(ISequentialOutStream *outStream, UInt32 numIt
   COM_TRY_END
 }
 
-STDMETHODIMP CHandler::GetFileTimeType(UInt32 *type)
+Z7_COM7F_IMF(CHandler::GetFileTimeType(UInt32 *type))
 {
   DEBUG_PRINT("GetFileTimeType\n");
   COM_TRY_BEGIN
@@ -282,7 +282,7 @@ STDMETHODIMP CHandler::GetFileTimeType(UInt32 *type)
   COM_TRY_END
 }
 
-STDMETHODIMP CHandler::SetProperties(const wchar_t * const *names, PROPVARIANT const *values, UInt32 numProps)
+Z7_COM7F_IMF(CHandler::SetProperties(const wchar_t * const *names, PROPVARIANT const *values, UInt32 numProps))
 {
   (void)values;
 

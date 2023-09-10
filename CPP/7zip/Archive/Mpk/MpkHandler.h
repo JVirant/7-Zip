@@ -11,7 +11,7 @@
 namespace NArchive {
 namespace Mpk {
 
-class CHandler:
+class CHandler Z7_final:
   public IInArchive,
   public IOutArchive,
   public ISetProperties,
@@ -22,14 +22,14 @@ class CHandler:
   int _compressionLevel = 5;
 
 public:
-  MY_QUERYINTERFACE_BEGIN2(IInArchive)
-  MY_QUERYINTERFACE_ENTRY(IOutArchive)
-  MY_QUERYINTERFACE_ENTRY(ISetProperties)
-  MY_QUERYINTERFACE_END
-  MY_ADDREF_RELEASE
+  Z7_COM_QI_BEGIN2(IInArchive)
+  Z7_COM_QI_ENTRY(IOutArchive)
+  Z7_COM_QI_ENTRY(ISetProperties)
+  Z7_COM_QI_END
+  Z7_COM_ADDREF_RELEASE
 
-  INTERFACE_IInArchive(;)
-  INTERFACE_IOutArchive(;)
+  Z7_IFACE_COM7_IMP(IInArchive)
+  Z7_IFACE_COM7_IMP(IOutArchive)
   STDMETHOD(SetProperties)(const wchar_t * const *names, const PROPVARIANT *values, UInt32 numProps);
 };
 

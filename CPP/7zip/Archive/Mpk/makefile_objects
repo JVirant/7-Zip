@@ -18,7 +18,6 @@ COMMON_OBJS = \
   $O/Wildcard.$(OBJ_EXT) \
 
 WIN_OBJS = \
-  $O/DLL.$(OBJ_EXT) \
   $O/FileDir.$(OBJ_EXT) \
   $O/FileFind.$(OBJ_EXT) \
   $O/FileIO.$(OBJ_EXT) \
