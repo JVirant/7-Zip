@@ -11,7 +11,7 @@ jobs:
     name: ggpk.dll Windows Build
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: build amd64
         uses: ilammy/msvc-dev-cmd@v1
         with:
@@ -34,7 +34,7 @@ jobs:
           cd CPP/7zip/Archive/Ggpk
           nmake
       - name: Upload DLLs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with: 
           name: DLLs
           path: |
